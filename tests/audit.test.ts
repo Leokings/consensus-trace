@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { IDBFactory } from 'fake-indexeddb';
 import { strToU8, unzipSync, zipSync } from 'fflate';
 import { normalizeReceipt } from '../src/core/receipt.js';
@@ -62,6 +63,11 @@ describe('audit regressions: public input and response boundary', () => {
   });
 });
 describe('audit regressions: stored evidence integrity', () => {
+  it('keeps desktop reports top-aligned when saved history grows', () => {
+    const css = readFileSync(new URL('../src/web/styles.css', import.meta.url), 'utf8');
+    expect(css).toContain('.main-panel{margin-block:0}');
+    expect(css).toContain('@media(min-width:641px){.history{max-height:45vh;overflow:auto}}');
+  });
   it('rejects a completed report with different source/assertion inputs', async () => {
     const run = await completed(); run.report!.input.source!.commit = 'b'.repeat(40);
     await expect(storage().save(run)).rejects.toThrow(/match|bound/i);
