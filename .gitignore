@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.local/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+*.sqlite*
+*.db*
+exports/
+.vercel/

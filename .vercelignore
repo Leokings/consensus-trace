@@ -1,0 +1,12 @@
+.git/
+.local/
+.env
+.env.*
+node_modules/
+dist/
+exports/
+coverage/
+docs/evidence/
+*.sqlite*
+*.db*
+*.log

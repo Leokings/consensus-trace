@@ -1,0 +1,8 @@
+{
+  "name": "Theater cue recovery — existing StudioNet deployment receipt",
+  "network": "studionet",
+  "contractAddress": "0x62122cb6486bc664084dec8c93ec6a61f1c51016",
+  "transactionHash": "0x786d6828903e6b37e82d94e7b7ea94575369d8d34d7008b837157581658f5059",
+  "assertions": [],
+  "includeTrace": false
+}
