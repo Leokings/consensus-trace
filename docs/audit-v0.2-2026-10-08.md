@@ -30,4 +30,6 @@ Scope: added wallet execution, preparation/resolution Functions, browser attempt
 
 The APIs use ordinary HTTPS RPC observations, not independent chain proofs. Method annotation recognition is not a Python AST/security audit. Gas units do not cap monetary fees. Source/time-state reads are current, not historical proofs. Supplied frontend captures are not authenticated. A zero-value call can affect consequential contract state, and separately prepared duplicate calls remain possible.
 
+See [v0.2 release observations](release-v0.2-2026-10-08.md) for the deployed commit, CI, live preparation, historical recovery, production inspection and separately anchored ZIP. The connected-account screenshot is kept local instead of publishing wallet identity.
+
 Per-instance admission limits are implemented, not a distributed quota. A scoped platform firewall read returned no active custom configuration; no new deployment-level WAF policy is claimed. Platform WAF rollout requires staging/review and publication by its owner. Provider timeout root causes remain unknown without provider logs. Site publication is not portal submission.

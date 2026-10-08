@@ -10,3 +10,5 @@ coverage/
 *.db*
 exports/
 .vercel/
+# Local wallet-review screenshots can contain a user's connected account.
+docs/evidence/v0.2-connected-wallet-review-2026-10-08.jpg

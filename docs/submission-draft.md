@@ -21,7 +21,9 @@ Live reads are verified separately from wallet-signed tests. Demos are synthetic
 1. **GitHub Repository** — https://github.com/Leokings/consensus-trace (public; MIT license).
 2. **Website / Demo** — https://consensus-trace-leokings588-5902s-projects.vercel.app/
 3. **GitHub File — runner audit and verification** — https://github.com/Leokings/consensus-trace/blob/codex/hosted-release/docs/audit-v0.2-2026-10-08.md
-4. **GitHub File — exact execution tooling source** — https://github.com/Leokings/consensus-trace/blob/codex/hosted-release/src/core/execution.ts
+4. **GitHub File — exact execution tooling source** — https://github.com/Leokings/consensus-trace/blob/2217e7e2e94f76af47a9276b25523dbfde881cb8/src/core/execution.ts
+
+Additional verification: https://github.com/Leokings/consensus-trace/blob/codex/hosted-release/docs/release-v0.2-2026-10-08.md
 
 Contribution date: **10/08/2026**. Notes: **957/1000 characters** with LF paragraph breaks; verify the portal's counter before submission. Choose the relevant developer-tooling/project category; this is not a deployed Intelligent Contract. No portal submission has been sent.
 

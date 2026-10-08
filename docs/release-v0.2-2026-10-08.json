@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "toolVersion": "0.2.0",
+  "recordedAt": "2026-10-08T22:40:00Z",
+  "source": {
+    "repository": "https://github.com/Leokings/consensus-trace",
+    "branch": "codex/hosted-release",
+    "deployedCommit": "2217e7e2e94f76af47a9276b25523dbfde881cb8"
+  },
+  "deployment": {
+    "projectId": "prj_22HOWF0e4VPe4bQeDhoKpCAjSviL",
+    "deploymentId": "dpl_EyDpE5eBhCrU5U3rUmqYHromXiYC",
+    "state": "READY",
+    "target": "production",
+    "region": "iad1",
+    "node": "24.x",
+    "uniqueUrl": "https://consensus-trace-9kvppu8bl-leokings588-5902s-projects.vercel.app/",
+    "publicAliases": [
+      "https://consensus-trace.vercel.app/",
+      "https://consensus-trace-leokings588-5902s-projects.vercel.app/"
+    ],
+    "functions": ["api/config", "api/inspect", "api/prepare", "api/resolve"],
+    "cliWaitConnectionReset": true,
+    "readyIndependentlyConfirmed": true
+  },
+  "automatedChecks": {
+    "testFiles": 10,
+    "testsPassed": 226,
+    "testsFailed": 0,
+    "typescriptAndViteBuild": "PASS",
+    "fullNpmAuditKnownVulnerabilities": 0,
+    "publicationScanProblems": 0,
+    "githubCi": "https://github.com/Leokings/consensus-trace/actions/runs/37854119720",
+    "githubCiConclusion": "success"
+  },
+  "productionConfig": {
+    "httpStatus": 200,
+    "version": "0.2.0",
+    "apiReadOnly": true,
+    "walletTests": true,
+    "frontendComparison": true,
+    "serverSigner": false
+  },
+  "livePreparation": {
+    "network": "bradbury",
+    "contractAddress": "0xb08773A551302B816F6bF3cce914D266b5C1a461",
+    "status": "READY",
+    "preparedAt": "2026-10-08T22:36:21.353Z",
+    "digest": "6aad272ca954aab5f5f9743626fea2eb1571290209ef69871e1a0f04e43a6be9",
+    "sourceSha256": "9edcde9acd1f9206a9bd4ef4b9f491a4d39ece605597c109f3172ba7916c2d33",
+    "browserPrepared": true,
+    "browserWalletConnected": true,
+    "newSubmissionStatus": "PENDING_HUMAN_AUTHORIZATION",
+    "newTransactionHash": null
+  },
+  "historicalSubmissionRecovery": {
+    "observedAt": "2026-10-08T22:34:04.548Z",
+    "outerHash": "0xe681d713a0f5177d601583ac73a19107b19671a070f8596459c068bbfd30aab1",
+    "status": "RESOLVED",
+    "genLayerTransactionId": "0x7e72eb0d3673b4e7fde739437c21931009751dc9b3129b3921285b5ad8ed00ba",
+    "configuredConsensusDestinationMatched": true,
+    "note": "Read-only recovery of a previously submitted transaction, not a new wallet execution."
+  },
+  "productionInspection": {
+    "httpStatus": 200,
+    "id": "1ae5876c-2ecc-420b-839f-7b8c7a9cf32e",
+    "createdAt": "2026-10-08T22:36:31.670Z",
+    "conclusion": "CHECKS_PASSED",
+    "execution": "SUCCESS",
+    "storedStatus": "FINALIZED",
+    "source": "EXACT",
+    "storedVerification1Verdict": "SUPPORTED",
+    "note": "An existing historical transaction and current finalized state were inspected."
+  },
+  "frontendIntegrationCheck": {
+    "httpStatus": 200,
+    "id": "8f1183ce-1462-46ad-8cf5-ec489f2d4471",
+    "createdAt": "2026-10-08T22:38:40.883Z",
+    "comparison": "DISPLAY_STALE",
+    "note": "Display and instrumented-read values were supplied integration-test data compared against a live equivalent finalized RPC read. This is not an observed third-party UI fault."
+  },
+  "newReadOnlyCliBundle": {
+    "id": "39836a19-9578-4075-bb23-e2d995e89e9d",
+    "createdAt": "2026-10-08T22:38:27.526Z",
+    "conclusion": "CHECKS_PASSED",
+    "path": "docs/evidence/v0.2-live/39836a19-9578-4075-bb23-e2d995e89e9d.zip",
+    "sha256": "609bccbaef7230e474085d5feb5d2166e15742fa497528142ad6b519ceec5601",
+    "independentVerifier": { "valid": true, "anchored": true, "filesChecked": 13, "errors": [] }
+  },
+  "limitations": [
+    "The first newly signed end-to-end test still requires human wallet authorization and an observed result. Historical receipts and unit tests are not substitutes.",
+    "Current state/source and supplied frontend captures do not establish historical causality or independent chain truth.",
+    "Gas units are not a monetary fee cap. A zero-value write can still have consequential effects.",
+    "Admission quotas are per instance; no active custom deployment-level WAF policy is claimed.",
+    "Provider timeout root causes require provider logs; this tool reports explicit unknowns.",
+    "This maintainer audit is not independent security certification, and no portal submission has been sent."
+  ]
+}
