@@ -1,5 +1,6 @@
 import { canonicalJson, record } from './json.js';
 import type { AssertionResult, AssertionSpec, Evidence, Json } from './types.js';
+import { assertComplexity } from './bounds.js';
 
 export function atPointer(value: Json, pointer: string): { found: boolean; value?: Json } {
   if (pointer === '') return { found: true, value };
@@ -22,7 +23,7 @@ export function evaluateAssertion(spec: AssertionSpec, evidence: Evidence): Asse
   let value = evidence.value;
   if (spec.parseJson) {
     if (typeof value !== 'string') return { ...base, status: 'UNAVAILABLE', reason: 'parseJson requires a string return value.' };
-    try { value = JSON.parse(value) as Json; } catch { return { ...base, status: 'UNAVAILABLE', reason: 'Read returned a string, but it was not valid JSON.' }; }
+    try { value = JSON.parse(value) as Json; assertComplexity(value); } catch { return { ...base, status: 'UNAVAILABLE', reason: 'Read returned a string, but it was not valid bounded JSON.' }; }
   }
   const found = atPointer(value, spec.pointer);
   if (!found.found) return { ...base, status: 'FAIL', reason: `Pointer ${spec.pointer} is absent.` };

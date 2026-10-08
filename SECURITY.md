@@ -11,16 +11,16 @@ Consensus Trace v0.1 has two deployment modes: a loopback-only local workbench a
 - RPC and source requests have bounded response bodies, validated JSON-RPC response IDs and no automatic retries. Deadlines are 15 seconds locally and eight seconds on the website.
 - At most three concurrent inspections; up to eight view assertions; bounded arguments and input bodies.
 - Chain, transaction ID and recipient binding precede code/schema and application-state checks. Assertions require recorded finality and successful execution.
-- Contradictory status/execution name-number metadata is treated as unknown and an error finding.
+- Contradictory textual/numeric status, execution, and named/encoded vote metadata is treated as unknown and an error finding. Explicit unknown execution codes are not replaced by nested leader success. Application reads are withheld for inconsistent receipts.
 - Optional trace retrieval is local-only, opt-in and cannot override stored receipt outcomes. The hosted endpoint rejects trace requests.
 - Report text is rendered as React text, never executable HTML. Expression evaluation, shell execution, arbitrary local file access and uploaded archive extraction are not exposed in the API.
 - SQL parameters bind identifiers and values. Finished snapshots are not overwritten by a refresh. Transaction IDs survive interruption.
 - A second live process does not automatically interrupt another process's active inspection. Dead owners and graceful shutdowns leave resumable interrupted records. PID reuse can leave an old record collecting; manual refresh remains available.
-- Bundle verification checks safe filenames, file-list integrity, hashes, count/size limits and an optional external ZIP digest. Verification never extracts files onto the filesystem.
-- Credential-like fields and recognized bearer/provider token patterns are redacted before reports are stored and exported. Redaction is idempotent and best-effort, not a guarantee.
+- Bundle verification checks safe filenames, duplicate physical paths, file-list integrity, hashes, count/size limits and an optional external ZIP digest. Verification never extracts files onto the filesystem. Exported Markdown escapes submitted link/control syntax.
+- Credential-like case fields and recognized bearer/provider token patterns are rejected before pending records are saved or inputs are sent. Captured response fields are redacted before reports are stored and exported. Redaction is idempotent and best-effort, not a guarantee.
 - Hosted request bodies are capped at 64 KiB, 24 nesting levels and 4,096 JSON nodes; report responses are capped at 4 MB. Unknown envelope fields and credential fields are rejected. Hosted logs record report identifiers, outcome and timing, not case contents.
 - Hosted admission control allows three concurrent inspections and six requests per minute per client key, **per Function instance**. It is not a distributed quota, trusted user identity or complete denial-of-service defense. No custom deployment-level WAF policy has been verified for this release.
-- Browser-private IndexedDB records have schema checks, immutable completed snapshots and limits of 200 reports/approximately 32 MiB. A record collecting for over 75 seconds is shown as interrupted. Refresh is manual; old reports are never automatically pruned.
+- Browser-private IndexedDB records and API responses have full runtime report checks and complete case/parent/fixture bindings, immutable completed snapshots and limits of 200 reports/approximately 32 MiB. Corrupt rows are isolated/preserved with a visible notice; all valid records remain accessible. A record collecting for over 75 seconds is shown as interrupted. Refresh is manual; old reports are never automatically pruned.
 - Vercel previews and unique production deployment URLs remain protected; only the production site alias is public. Source browsing is disabled. Local databases, environment files and generated exports are excluded from upload.
 
 ## Not guaranteed

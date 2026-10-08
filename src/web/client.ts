@@ -1,6 +1,7 @@
 import { parseCase } from '../core/input.js';
 import type { NetworkId, RunRecord, TraceCase, TraceReport } from '../core/types.js';
 import { BrowserRunStore } from './storage.js';
+import { parseReport } from '../core/report.js';
 
 export interface Config {
   fixtures: { id: string; title: string; detail: string; input?: TraceCase }[];
@@ -10,8 +11,9 @@ export interface Config {
 let configuration: Config | undefined;
 let browserStore: BrowserRunStore | undefined;
 export function configureClient(settings: Config, store?: BrowserRunStore) {
-  configuration = settings; if (settings.storage === 'browser') browserStore = store ?? new BrowserRunStore();
+  configuration = settings; browserStore = settings.storage === 'browser' ? store ?? new BrowserRunStore() : undefined;
 }
+export function storageNotices(): string[] { return browserStore?.notices ?? []; }
 async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, init); let data: unknown;
   try { data = await response.json(); } catch { throw new Error(`The inspection API returned an unreadable response (${response.status}).`); }
@@ -30,8 +32,8 @@ async function startBrowserInspection(input: unknown, options: { fixtureId?: str
     try {
       const result = await fetchJson<{ report: TraceReport }>('/api/inspect', { method: 'POST', headers: { 'content-type': 'application/json' }, signal: AbortSignal.timeout(55000),
         body: JSON.stringify({ id: run.id, parentId: options.parentId, fixtureId: options.fixtureId, ...(!options.fixtureId ? { input: parsed } : {}) }) });
-      if (result.report.id !== run.id || result.report.input.transactionHash !== run.input.transactionHash || result.report.input.contractAddress.toLowerCase() !== run.input.contractAddress.toLowerCase() || result.report.input.network !== run.input.network || result.report.origin !== (options.fixtureId ? 'fixture' : 'live')) throw new Error('Returned report identity does not match this inspection.');
-      await store.save({ ...run, status: 'complete', report: result.report });
+      const report = parseReport(result.report, run, options.fixtureId ? 'fixture' : 'live');
+      await store.save({ ...run, status: 'complete', report });
     } catch (failure) {
       await store.save({ ...run, status: 'interrupted', failure: failure instanceof Error ? failure.message : 'Inspection could not be completed.' }).catch(() => undefined);
     }

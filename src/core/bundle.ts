@@ -17,7 +17,7 @@ const MAX_ARCHIVE = 8388608;
 function safePath(path: string): boolean { return /^[A-Za-z0-9_./-]+$/.test(path) && !path.startsWith('/') && path.split('/').every(part => part !== '..' && part !== '.' && part !== ''); }
 
 export function markdownReport(report: TraceReport): string {
-  const safe = (text: string) => text.replace(/[\r\n]/g, ' ').replace(/[<>&]/g, char => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[char]!);
+  const safe = (text: string) => text.replace(/[\r\n\u0000-\u001f\u007f\u202a-\u202e\u2066-\u2069]/g, ' ').replace(/[<>&]/g, char => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' })[char]!).replace(/[\\`*_{}\[\]()#+!|]/g, '\\$&');
   const lines = [
     '# Consensus Trace', '', report.origin === 'fixture' ? '**SYNTHETIC FIXTURE — NOT LIVE SUBMISSION EVIDENCE**' : '**LIVE RPC OBSERVATION — READ-ONLY**', '',
     `Case: ${safe(report.input.name)}`, `Report: ${report.id}`, `Captured: ${report.createdAt}`, `Conclusion: ${report.conclusion}`, '',
@@ -38,7 +38,8 @@ export function markdownReport(report: TraceReport): string {
   return lines.join('\n');
 }
 
-export function buildBundle(original: TraceReport): { bytes: Uint8Array; sha256: string; manifest: Manifest } {
+export class EvidenceBundleLimitError extends Error {}
+function bundleFiles(original: TraceReport): { files: Record<string, Uint8Array>; manifest: Manifest } {
   const report = redactReport(original);
   const files: Record<string, Uint8Array> = {};
   const addJson = (path: string, value: unknown) => { files[path] = strToU8(`${canonicalJson(value)}\n`); };
@@ -55,7 +56,12 @@ export function buildBundle(original: TraceReport): { bytes: Uint8Array; sha256:
   };
   addJson('manifest.json', manifest);
   const totalBytes = Object.values(files).reduce((sum, value) => sum + value.length, 0);
-  if (totalBytes > MAX_ARCHIVE) throw new Error('Evidence bundle exceeds the 8 MiB uncompressed limit.');
+  if (totalBytes > MAX_ARCHIVE) throw new EvidenceBundleLimitError('Evidence bundle exceeds the 8 MiB uncompressed limit.');
+  return { files, manifest };
+}
+export function assertBundleFits(report: TraceReport): void { bundleFiles(report); }
+export function buildBundle(original: TraceReport): { bytes: Uint8Array; sha256: string; manifest: Manifest } {
+  const { files, manifest } = bundleFiles(original);
   const bytes = zipSync(files, { level: 6, mtime: new Date(2000, 0, 1) });
   return { bytes, sha256: sha256(bytes), manifest };
 }
@@ -66,10 +72,12 @@ export function verifyBundle(bytes: Uint8Array, expectedZipSha256?: string): { v
   if (bytes.length > MAX_ARCHIVE) errors.push('Compressed ZIP is too large.');
   try {
     if (errors.length) throw new Error('Archive rejected before decompression.');
-    let size = 0; let entries = 0;
+    let size = 0; let entries = 0; const paths = new Set<string>();
     const files = unzipSync(bytes, { filter: file => {
       entries++; size += file.originalSize;
       if (!safePath(file.name) || entries > 64 || size > MAX_ARCHIVE) throw new Error('Unsafe archive path, too many entries, or excessive uncompressed size.');
+      if (paths.has(file.name)) throw new Error('Duplicate physical archive path.');
+      paths.add(file.name);
       return true;
     } });
     if (!files['manifest.json']) throw new Error('manifest.json is missing.');

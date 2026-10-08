@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { IDBFactory } from 'fake-indexeddb';
 import { randomUUID } from 'node:crypto';
-import { handleInspection, hostedConfig, AdmissionGate } from '../src/hosted/handler.js';
+import { handleInspection as inspectHosted, hostedConfig, AdmissionGate } from '../src/hosted/handler.js';
 import { fixtureCase, FixtureCollector } from '../src/fixtures/index.js';
 import { inspectCase } from '../src/core/inspect.js';
 import { BrowserRunStore } from '../src/web/storage.js';
@@ -11,6 +11,8 @@ import type { RunRecord, TraceReport } from '../src/core/types.js';
 
 const url = 'https://consensus-trace.vercel.app/api/inspect';
 const quiet = () => undefined;
+// Each test gets an isolated instance quota unless it explicitly tests a shared gate.
+const handleInspection = (request: Request, options: Parameters<typeof inspectHosted>[1] = {}) => inspectHosted(request, { gate: new AdmissionGate(), ...options });
 const payload = (extra: object = {}) => ({ id: randomUUID(), fixtureId: 'successful', ...extra });
 const inspectionRequest = (body: unknown, headers: HeadersInit = {}) => new Request(url, { method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://consensus-trace.vercel.app', ...headers }, body: JSON.stringify(body) });
 describe('public hosted inspection boundary', () => {
@@ -44,7 +46,7 @@ afterEach(async () => { for (const item of stores.splice(0)) await item.close();
 describe('browser-local immutable report storage', () => {
   it('persists reports across new store instances without server history', async () => { const factory = new IDBFactory(); const name = randomUUID(); const a = store(factory, name); const run = await completed(); await a.save(run); await a.close(); const b = store(factory, name); expect(await b.get(run.id)).toEqual(run); expect((await b.list())[0].conclusion).toBe('CHECKS_PASSED'); });
   it('does not expose reports to a different browser database', async () => { const factory = new IDBFactory(); const a = store(factory, 'first'); const b = store(factory, 'second'); await a.save(await completed()); expect(await b.list()).toEqual([]); });
-  it('rejects overwriting completed evidence snapshots', async () => { const a = store(); const run = await completed(); await a.save(run); await expect(a.save({ ...run, input: { ...run.input, name: 'Changed' } })).rejects.toThrow('cannot be overwritten'); expect((await a.get(run.id))?.input.name).toBe(run.input.name); });
+  it('rejects overwriting completed evidence snapshots', async () => { const a = store(); const run = await completed(); await a.save(run); const changed = structuredClone(run); changed.input.name = changed.report!.input.name = 'Changed'; await expect(a.save(changed)).rejects.toThrow('cannot be overwritten'); expect((await a.get(run.id))?.input.name).toBe(run.input.name); });
   it('preserves existing reports when its byte quota is exceeded', async () => { const a = store(undefined, undefined, 1000); const run = await completed(); await expect(a.save(run)).rejects.toThrow('history is full'); expect(await a.list()).toEqual([]); });
   it('recovers a stale collecting record without resubmitting the transaction', async () => { const a = store(); const run = await completed(); const pending: RunRecord = { id: run.id, createdAt: run.createdAt, input: run.input, status: 'collecting' }; await a.save(pending); const recovered = await a.get(run.id, Date.parse(run.createdAt) + 76000); expect(recovered?.status).toBe('interrupted'); expect(recovered?.input.transactionHash).toBe(run.input.transactionHash); });
   it('keeps an active collection intact', async () => { const a = store(); const run = await completed(); await a.save({ id: run.id, createdAt: run.createdAt, input: run.input, status: 'collecting' }); expect((await a.get(run.id, Date.parse(run.createdAt) + 1000))?.status).toBe('collecting'); });

@@ -2,6 +2,7 @@ import { NETWORKS, READ_METHODS } from '../core/networks.js';
 import { githubRawUrl } from '../core/source.js';
 import { sourceSchema } from '../core/input.js';
 import { record } from '../core/json.js';
+import { assertComplexity } from '../core/bounds.js';
 import type { Collector, Evidence, Json, NetworkId, SourceRef } from '../core/types.js';
 
 export async function boundedText(response: Response, limit = 2097152): Promise<string> {
@@ -22,10 +23,10 @@ export async function boundedText(response: Response, limit = 2097152): Promise<
 }
 export class HttpCollector implements Collector {
   private nextId = 1;
-  constructor(private readonly fetcher: typeof fetch = fetch, private readonly timeoutMs = 15000) {}
+  constructor(private readonly fetcher: typeof fetch = fetch, private readonly timeoutMs = 15000, private readonly signal?: AbortSignal) {}
   private async capture<T>(method: string, action: (signal: AbortSignal) => Promise<T>): Promise<Evidence<T>> {
     const started = Date.now(); const capturedAt = new Date().toISOString();
-    try { const value = await action(AbortSignal.timeout(this.timeoutMs)); return { kind: 'ok', method, capturedAt, durationMs: Date.now() - started, value }; }
+    try { const timeout = AbortSignal.timeout(this.timeoutMs); const signal = this.signal ? AbortSignal.any([timeout, this.signal]) : timeout; signal.throwIfAborted(); const value = await action(signal); return { kind: 'ok', method, capturedAt, durationMs: Date.now() - started, value }; }
     catch (error) {
       const data = record(error);
       const unsupported = data.code === -32601;
@@ -44,6 +45,7 @@ export class HttpCollector implements Collector {
       const response = await this.fetcher(NETWORKS[network].rpc, { method: 'POST', redirect: 'error', credentials: 'omit', signal, headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id, method, params }) });
       if (!response.ok) throw new Error(`RPC returned HTTP ${response.status}.`);
       const data = record(JSON.parse(await boundedText(response)));
+      assertComplexity(data);
       if (data.id !== id || data.jsonrpc !== '2.0') throw new Error('RPC response envelope does not match the request.');
       if (data.error) {
         const rpcError = record(data.error);

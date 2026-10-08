@@ -16,7 +16,7 @@ Submitted cases are sent to the hosted API and the necessary RPC/public-source s
 
 ## Start locally
 
-Requires Node.js **24.11+** (the local store uses built-in SQLite).
+Requires Node.js **24.11+ within Node 24** (the local store uses built-in SQLite).
 
 ```powershell
 cd C:\Users\leoki\Genlayer\consensus-trace
@@ -82,6 +82,8 @@ The CLI writes uniquely named ZIP/hash files with exclusive creation; it does no
 
 Operators: `equals`, `exists`, `contains`, `gte`, `lte`. Paths are RFC 6901 JSON pointers, not executable expressions. Use `parseJson: true` only for a view returning a JSON **string**. Exact equality preserves types; GenVM big integers are represented as decimal strings. Integer inequalities avoid floating-point conversion. Unsafe-size JSON numbers, duplicate assertion labels, unpinned commits, arbitrary RPC URLs and path traversal are rejected.
 
+Nested credential-like fields and recognized token patterns are rejected before saving or sending a case. Do not enter secrets: this is pattern-based protection, not perfect secret detection. API and stored reports are validated and bound to the complete case before rendering. Conflicting receipt fields fail closed.
+
 `CHECKS_PASSED` requires a verified chain and receipt binding, stored finality, successful execution, exact source match, and at least one assertion with all requested assertions passing. It is **not a security audit**.
 
 ## Evidence verification
@@ -90,7 +92,7 @@ Operators: `equals`, `exists`, `contains`, `gte`, `lte`. Paths are RFC 6901 JSON
 npm run verify:bundle -- exports/smoke/REPORT_UUID.zip --sha256 TRUSTED_ZIP_SHA256
 ```
 
-Without an external trusted ZIP digest the verifier checks **internal integrity only**, not authorship/authenticity. Manifest hashes describe exported bytes. Source hashes describe the originally captured text before any redaction. ZIP member timestamps are fixed for reproducible hashes. ZIP validation rejects unsafe paths, unlisted or missing files, wrong hashes and oversized archives.
+Without an external trusted ZIP digest the verifier checks **internal integrity only**, not authorship/authenticity. Manifest hashes describe exported bytes. Source hashes describe the originally captured text before any redaction. ZIP member timestamps are fixed for reproducible hashes. ZIP validation rejects unsafe paths, duplicate physical entries, unlisted or missing files, wrong hashes and oversized archives.
 
 ## MCP
 
@@ -126,11 +128,11 @@ Tests cover receipt parsing, explicit unknowns, incorrect bindings, forbidden RP
 
 `vercel.json` configures the Vite frontend and the stateless `/api/config` and `/api/inspect` Functions. Deploy with Node.js 24; no application secret or database account is required. `.vercelignore` excludes local databases, exports and evidence folders. Do not upload local report history.
 
-The public API accepts at most 64 KiB per request, eight assertions, bounded JSON structure and a 4 MB report. Upstream calls have eight-second deadlines; browser inspection has a 55-second deadline. Each Function instance allows at most three concurrent inspections and six requests per minute per client key. This is **best-effort, per-instance admission control**, not a distributed quota or a complete abuse-prevention system. Add deployment-level controls before higher-volume operation.
+The public API accepts at most 64 KiB per request, eight assertions, bounded JSON structure and a 4 MB report. Body reception is limited to five seconds, collection to 40 seconds, upstream calls to eight seconds, and browser inspection to 55 seconds. Request cancellation is propagated. The expanded evidence export is preflighted against its 8 MiB budget. Each Function instance allows at most three concurrent inspections and six requests per minute per client key, including invalid requests. This is **best-effort, per-instance admission control**, not a distributed quota or a complete abuse-prevention system. Add deployment-level controls before higher-volume operation.
 
-Browser storage is limited to 200 reports and approximately 32 MiB. Reaching the limit produces a visible error; old evidence is not silently deleted. Export valuable reports before clearing site data.
+Browser storage is limited to 200 reports and approximately 32 MiB. All valid retained records are accessible. Damaged records are isolated and preserved with a visible warning. Reaching the limit produces a visible error; old evidence is not silently deleted. Export valuable reports before clearing site data.
 
-See [architecture](docs/architecture.md), [security boundaries](SECURITY.md), [local verification evidence](docs/verification.md), [hosted browser verification](docs/hosted-verification.md) and [submission draft](docs/submission-draft.md).
+See [architecture](docs/architecture.md), [security boundaries](SECURITY.md), [maintainer audit](docs/audit-2026-10-08.md), [local verification evidence](docs/verification.md), [hosted browser verification](docs/hosted-verification.md) and [submission draft](docs/submission-draft.md).
 
 ## Important limits
 

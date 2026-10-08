@@ -48,7 +48,7 @@ export async function inspectCase(rawInput: unknown, collector: Collector, optio
   }
   const source: TraceReport['source'] = !input.source ? { comparison: 'NOT_REQUESTED' }
     : deployedCode.kind === 'ok' && pinnedSource.kind === 'ok' ? compareSource(deployedCode.value, pinnedSource.value) : { comparison: 'UNAVAILABLE' };
-  const canRead = bindingValid && receipt.finalized && receipt.execution === 'SUCCESS';
+  const canRead = bindingValid && receipt.finalized && receipt.execution === 'SUCCESS' && receipt.inconsistencies.length === 0;
   const assertions = await Promise.all(input.assertions.map(async spec => {
     if (!canRead) return evaluateAssertion(spec, skipped('gen_call', 'A bound, finalized transaction with successful execution is required before application-state checks.'));
     let evidence: Evidence;

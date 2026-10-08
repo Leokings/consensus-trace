@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { NetworkId, RunRecord } from '../core/types.js';
 import { Badge, ReportView } from './ReportView.js';
-import { configureClient, request, type Config } from './client.js';
+import { configureClient, request, storageNotices, type Config } from './client.js';
 import type { History } from './storage.js';
 
 const defaultAssertions = JSON.stringify([{ label: 'Stored verdict for verification 1', method: 'get_verification', args: [1], pointer: '/verdict', operator: 'equals', expected: 'SUPPORTED' }], null, 2);
@@ -12,6 +12,7 @@ export function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [run, setRun] = useState<RunRecord | null>(null);
   const [error, setError] = useState('');
+  const [historyNotices, setHistoryNotices] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [exported, setExported] = useState<{ id: string; sha256: string } | null>(null);
   const [mode, setMode] = useState<'live' | 'demo'>('demo');
@@ -27,7 +28,7 @@ export function App() {
   const [includeTrace, setIncludeTrace] = useState(false);
   const [traceRound, setTraceRound] = useState('0');
   const pollTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const refreshHistory = useCallback(async () => { setHistory(await request<History[]>('/api/runs')); }, []);
+  const refreshHistory = useCallback(async () => { setHistory(await request<History[]>('/api/runs')); setHistoryNotices(storageNotices()); }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -35,7 +36,7 @@ export function App() {
       if (controller.signal.aborted) return;
       configureClient(settings); const rows = await request<History[]>('/api/runs', { signal: controller.signal });
       if (controller.signal.aborted) return;
-      setConfig(settings); setHistory(rows); if (rows[0]) setSelectedId(rows[0].id);
+      setConfig(settings); setHistory(rows); setHistoryNotices(storageNotices()); if (rows[0]) setSelectedId(rows[0].id);
       if (settings.storage === 'browser') setMode('live');
     }).catch(failure => { if (!controller.signal.aborted) setError(failure instanceof Error ? failure.message : 'Unable to load the workbench API.'); });
     return () => controller.abort();
@@ -110,6 +111,7 @@ export function App() {
       <main className="main-panel">
         <div className="workspace-heading"><div><span className="eyebrow">GENLAYER / DEVELOPER TOOLING</span><h1>Follow the evidence.</h1><p>Source → consensus → execution → finalized state.</p></div><span className="workspace-mark">CT / 001</span></div>
         {error ? <div className="error-banner" role="alert"><strong>Inspection needs attention.</strong><span>{error}</span><button onClick={() => setError('')} aria-label="Dismiss error">×</button></div> : null}
+        {historyNotices.map(notice => <div className="error-banner" role="status" key={notice}><strong>History recovery notice.</strong><span>{notice}</span></div>)}
         {collecting ? <section className="loading-panel" role="status"><div className="loader" /><h2>Collecting bounded evidence.</h2><p>The transaction ID is already saved. Requests have time and size limits; no transaction will be resubmitted.</p></section> : run?.report ? <><ReportView key={run.id} report={run.report} onRefresh={() => { void refresh(); }} onExport={config?.storage === 'browser' ? () => { void exportEvidence(); } : undefined} busy={busy} />{exported?.id === run.id ? <div className="hash-block"><span>EXPORTED ZIP SHA-256 · preserve separately</span><code>{exported.sha256}</code></div> : null}</> : run?.status === 'interrupted' ? <section className="empty-panel"><Badge value="INTERRUPTED" tone="amber" /><h2>The inspection was interrupted.</h2><p>{run.failure ?? 'The transaction ID was preserved. Resume a fresh read-only snapshot without sending a transaction.'}</p><button className="primary" disabled={busy} onClick={() => { void refresh(); }}>Resume inspection</button></section> : <section className="empty-panel"><div className="trace-illustration" aria-hidden="true"><span className="trace-node">01</span><i /><span className="trace-node">02</span><i /><span className="trace-node alert-node">!</span><i /><span className="trace-node hollow">04</span></div><div className="eyebrow">A RECEIPT IS NOT THE WHOLE STORY</div><h2>Accepted doesn’t always<br />mean it worked.</h2><p>Connect the exact source, the recorded execution result and your expected finalized values. Get a report that separates what happened from what is still unknown.</p><div className="empty-capabilities"><span>✓ Commit-pinned source</span><span>✓ Execution-aware diagnostics</span><span>✓ Review-ready evidence ZIP</span></div><p className="empty-hint">Choose a demo fixture on the left, or inspect an existing live transaction.</p></section>}
         <footer className="page-footer"><span>CONSENSUS TRACE</span><span>Observed failures. Explicit unknowns. Reproducible evidence.</span><span>LOCAL-FIRST · MIT</span></footer>
       </main>

@@ -1,5 +1,9 @@
 import { z } from 'zod';
 import type { Json, TraceCase } from './types.js';
+import { assertComplexity } from './bounds.js';
+import { redact } from './redact.js';
+
+export class CaseInputError extends Error {}
 
 const jsonValue: z.ZodType<Json> = z.lazy(() => z.union([
   z.null(), z.boolean(), z.number().finite().refine(Number.isSafeInteger, 'Use safe integer JSON numbers; encode larger integers as strings.'),
@@ -37,9 +41,11 @@ export const caseSchema = z.object({
 }).strict();
 
 export function parseCase(input: unknown): TraceCase {
+  try { assertComplexity(input, 24, 4096); } catch { throw new CaseInputError('Test case is too deeply nested or complex.'); }
   const serialized = JSON.stringify(input);
-  if (!serialized || new TextEncoder().encode(serialized).byteLength > 262144) throw new Error('Test case exceeds 256 KiB.');
+  if (!serialized || new TextEncoder().encode(serialized).byteLength > 262144) throw new CaseInputError('Test case exceeds 256 KiB.');
+  if (redact(input).replacements > 0) throw new CaseInputError('Credential-like fields or tokens are not accepted in test cases. Use public, non-sensitive inputs.');
   const value = caseSchema.parse(input);
-  if (new Set(value.assertions.map(assertion => assertion.label)).size !== value.assertions.length) throw new Error('Assertion labels must be unique.');
+  if (new Set(value.assertions.map(assertion => assertion.label)).size !== value.assertions.length) throw new CaseInputError('Assertion labels must be unique.');
   return value;
 }

@@ -1,16 +1,21 @@
 import { sha256 as hashSha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex } from '@noble/hashes/utils.js';
 import type { Json } from './types.js';
+import { assertComplexity } from './bounds.js';
 
 export function jsonSafe(value: unknown): Json {
+  assertComplexity(value);
+  return convert(value);
+}
+function convert(value: unknown): Json {
   if (value === undefined || value === null) return null;
   if (typeof value === 'bigint') return value.toString();
   if (typeof value === 'string' || typeof value === 'boolean') return value;
   if (typeof value === 'number') return Number.isFinite(value) ? value : String(value);
   if (value instanceof Uint8Array) return `0x${bytesToHex(value)}`;
-  if (value instanceof Map) return Object.fromEntries([...value.entries()].map(([key, item]) => [String(key), jsonSafe(item)]));
-  if (Array.isArray(value)) return value.map(jsonSafe);
-  if (typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, jsonSafe(item)]));
+  if (value instanceof Map) return Object.fromEntries([...value.entries()].map(([key, item]) => [String(key), convert(item)]));
+  if (Array.isArray(value)) return value.map(convert);
+  if (typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, convert(item)]));
   return String(value);
 }
 export function canonicalJson(value: unknown): string {

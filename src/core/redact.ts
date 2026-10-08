@@ -1,7 +1,9 @@
 import type { TraceReport } from './types.js';
+import { assertComplexity } from './bounds.js';
 
 const sensitiveKey = /^(?:authorization|cookie|set-cookie|password|passwd|secret|private[_-]?key|api[_-]?key|access[_-]?token|refresh[_-]?token|bearer|headers|node_config)$/i;
 export function redact<T>(value: T): { value: T; replacements: number } {
+  assertComplexity(value);
   let replacements = 0;
   function walk(item: unknown): unknown {
     if (typeof item === 'string') return item

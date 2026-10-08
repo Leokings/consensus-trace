@@ -5,7 +5,7 @@
   "type": "module",
   "license": "MIT",
   "description": "Source-bound, read-only live test verification for GenLayer Intelligent Contracts",
-  "engines": { "node": ">=24.11.0" },
+  "engines": { "node": ">=24.11.0 <25" },
   "scripts": {
     "dev": "tsx watch src/server/index.ts --dev",
     "start": "tsx src/server/index.ts",
