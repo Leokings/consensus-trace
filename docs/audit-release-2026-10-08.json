@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-10-08T21:37:43Z",
+  "tool": "consensus-trace",
+  "toolVersion": "0.1.0",
+  "repository": {
+    "url": "https://github.com/Leokings/consensus-trace",
+    "visibility": "public",
+    "license": "MIT",
+    "defaultBranch": "codex/hosted-release"
+  },
+  "audit": {
+    "type": "maintainer code and hosted verification",
+    "independentSecurityCertification": false,
+    "findingsFixed": 11,
+    "criticalOrHighFindingsRemainingInReviewedScope": 0,
+    "newRegressionTests": 24,
+    "totalTests": 154,
+    "testFiles": 8,
+    "tests": "passed",
+    "typecheckAndProductionBuild": "passed",
+    "knownDependencyVulnerabilities": 0,
+    "dependencyAuditScope": "production and development",
+    "report": "docs/audit-2026-10-08.md"
+  },
+  "deployment": {
+    "id": "dpl_6dsRVXRtDxKqYWciw5ow9anpEALy",
+    "state": "READY",
+    "environment": "production",
+    "source": "cli",
+    "sourceCommit": "daa8b1c8a2e8869884f72aed54a3e5157bcba3e5",
+    "provenance": "Vercel returned matching GitHub repository, branch and commit metadata for a CLI source upload. This is not an independent signature or chain authentication.",
+    "projectId": "prj_22HOWF0e4VPe4bQeDhoKpCAjSviL",
+    "teamId": "team_2L0T4LCdFsCTFcckeTFWZRvN",
+    "publicUrl": "https://consensus-trace-leokings588-5902s-projects.vercel.app/",
+    "aliases": [
+      "https://consensus-trace.vercel.app/",
+      "https://consensus-trace-leokings588-5902s-projects.vercel.app/"
+    ],
+    "protectedUniqueUrl": "https://consensus-trace-7ksm2nk4q-leokings588-5902s-projects.vercel.app/",
+    "framework": "vite",
+    "nodeMajor": 24,
+    "buildRegion": "iad1",
+    "observedFunctionRegion": "cpt1",
+    "buildDurationMs": 39731,
+    "assets": [
+      "/assets/index-CxsWaXaJ.js",
+      "/assets/index-BPpnH6qm.css"
+    ],
+    "cliObservation": "Status polling connection reset after deployment creation; authenticated deployment inspection confirmed the same ID reached READY. No duplicate deployment was submitted."
+  },
+  "ci": {
+    "runId": 37847396337,
+    "url": "https://github.com/Leokings/consensus-trace/actions/runs/37847396337",
+    "sourceCommit": "daa8b1c8a2e8869884f72aed54a3e5157bcba3e5",
+    "conclusion": "success"
+  },
+  "browser": {
+    "name": "Chrome",
+    "testedUrl": "https://consensus-trace-leokings588-5902s-projects.vercel.app/",
+    "restoredRecordsBeforeFinalSmoke": 8,
+    "geometry": {
+      "headingTopBeforePx": 482.6375122070313,
+      "headingTopAfterPx": 155.1999969482422,
+      "viewportHeightPx": 954
+    },
+    "screenshot": "docs/evidence/audited-final-release-2026-10-08.jpg",
+    "finalSmoke": {
+      "reportId": "3a18838a-690c-451b-83ab-07f46042d759",
+      "origin": "live",
+      "network": "bradbury",
+      "conclusion": "CHECKS_PASSED",
+      "finalized": true,
+      "execution": "SUCCESS",
+      "sourceComparison": "EXACT",
+      "assertionsPassed": 1,
+      "assertionsTotal": 1,
+      "recordedAgreeVotes": 5,
+      "recordedVoteEntries": 5,
+      "durationMs": 2931,
+      "contract": "0xb08773A551302B816F6bF3cce914D266b5C1a461",
+      "existingTransaction": "0x7e72eb0d3673b4e7fde739437c21931009751dc9b3129b3921285b5ad8ed00ba",
+      "assertion": {
+        "method": "get_verification",
+        "args": [
+          1
+        ],
+        "pointer": "/verdict",
+        "expected": "SUPPORTED",
+        "observed": "SUPPORTED",
+        "stateVariant": "latest-final"
+      }
+    }
+  },
+  "bundles": [
+    {
+      "path": "docs/evidence/final-bradbury-3a18838a-690c-451b-83ab-07f46042d759.zip",
+      "sha256": "1b511f579b1585fa5dfceb5b6dcb01f334e2f458419f4fccf37d3d84079fc4f9",
+      "downloadedVia": "hosted UI",
+      "externalAnchor": "displayed browser SHA-256",
+      "valid": true,
+      "anchored": true,
+      "filesChecked": 13,
+      "errors": []
+    },
+    {
+      "path": "docs/evidence/audited-bradbury-e6cdac42-824d-43b1-bdba-2553ef050610.zip",
+      "sha256": "63e364550b14ea031f0c80b0bc232d23866976d5ecdd7e4a3adb2653fdae7b45",
+      "downloadedVia": "hosted UI",
+      "valid": true,
+      "anchored": true,
+      "filesChecked": 13,
+      "errors": []
+    },
+    {
+      "path": "docs/evidence/audited-studionet-ac322570-7d74-4c0d-a1df-d9682b3aa6e0.zip",
+      "sha256": "9797aae904c38c02deed59cd9c70e443a3ba2e5f7bb8261add3c248507a95a6d",
+      "downloadedVia": "hosted UI",
+      "valid": true,
+      "anchored": true,
+      "filesChecked": 10,
+      "errors": [],
+      "conclusion": "INCOMPLETE",
+      "redactionReplacements": 12
+    }
+  ],
+  "negativeHostedTests": [
+    {
+      "case": "ambiguous fixture plus live input",
+      "status": 400
+    },
+    {
+      "case": "nested credential-like input",
+      "status": 400
+    }
+  ],
+  "observability": {
+    "groupedRuntimeErrors": 0,
+    "scanLookback": "1h",
+    "asOf": "2026-10-08T21:34:47Z",
+    "drains": "unverified: team-scoped read returned 404",
+    "customWaf": "not established",
+    "globalDistributedQuota": "not implemented",
+    "browserWarnings": "observed MetaMask extension warnings, no application-origin errors in captured logs"
+  },
+  "limitations": [
+    "Read-only inspection of existing transactions; no fresh signed test transaction was submitted.",
+    "Assertions observe current latest-final state, not historical causality.",
+    "Source equality checks currently retrieved code, not independently authenticated transaction-time provenance.",
+    "Fixture reports are synthetic and not live evidence.",
+    "Public admission limits are per instance, not a global quota or complete abuse-control system.",
+    "No active external alerting/drain configuration was verified.",
+    "Credential rejection and output redaction are pattern-based, not perfect secret detection."
+  ],
+  "submission": {
+    "descriptionCharactersWithLf": 970,
+    "contributionDate": "10/08/2026",
+    "category": "developer tooling, not Intelligent Contract",
+    "submitted": false
+  }
+}

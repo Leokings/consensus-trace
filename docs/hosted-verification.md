@@ -1,5 +1,7 @@
 # Hosted website verification — 2026-10-08
 
+This records the first hosted release (130 tests), before the maintainer audit. See [audited release evidence](audit-release-2026-10-08.md) for repaired source, 154 tests, public repository, and current deployment checks.
+
 [Public production site](https://consensus-trace-leokings588-5902s-projects.vercel.app/).
 
 Deployment `dpl_9gKt1vGi4FKRFDaWLyGRfTPGj6wQ` reached `READY` in production. The build ran in `iad1` with Vite 8.3.4 and Node 24; observed Functions ran in `cpt1`. The build/install reported zero vulnerabilities. Local verification: 130 tests across seven files passed; TypeScript/Vite build passed; `npm audit --omit=dev` found zero vulnerabilities.
