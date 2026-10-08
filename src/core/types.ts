@@ -24,6 +24,26 @@ export interface TraceCase {
   assertions: AssertionSpec[];
   includeTrace: boolean;
   traceRound: number;
+  frontend?: FrontendSnapshot[];
+}
+export interface FrontendSnapshot {
+  label: string;
+  network: NetworkId;
+  contractAddress: string;
+  method: string;
+  args: Json[];
+  pointer: string;
+  parseJson: boolean;
+  stateVariant: 'latest-final';
+  capturedAt: string;
+  displayedValue: Json;
+  readValue?: Json;
+}
+export interface FrontendComparison {
+  snapshot: FrontendSnapshot;
+  status: 'MATCH' | 'DISPLAY_STALE' | 'DIVERGENCE' | 'NOT_COMPARABLE' | 'UNAVAILABLE';
+  reason: string;
+  assertionIndex?: number;
 }
 export type Vote = 'AGREE' | 'DISAGREE' | 'TIMEOUT' | 'DETERMINISTIC_VIOLATION' | 'NOT_VOTED' | 'UNKNOWN';
 export interface RoundSummary {
@@ -68,7 +88,7 @@ export interface TraceReport {
   origin: 'live' | 'fixture';
   fixtureId?: string;
   createdAt: string;
-  toolVersion: '0.1.0';
+  toolVersion: '0.1.0' | '0.2.0';
   sdkVersion: '1.1.8';
   input: TraceCase;
   network: { id: NetworkId; chainId: number; rpc: string; explorer: string; chainVerified: boolean };
@@ -91,6 +111,7 @@ export interface TraceReport {
     pinnedLfSha256?: string;
   };
   assertions: AssertionResult[];
+  frontend?: FrontendComparison[];
   findings: Finding[];
   conclusion: 'CHECKS_PASSED' | 'ISSUES_FOUND' | 'INCOMPLETE';
   links: { contract: string; transaction: string; source?: string };

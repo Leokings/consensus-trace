@@ -9,7 +9,7 @@ export function githubFileUrl(ref: SourceRef): string {
 }
 export function decodeSource(raw: unknown): string {
   if (typeof raw !== 'string' || !raw || raw.length > 524288 || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(raw)) throw new Error('The RPC did not return bounded base64-encoded contract source.');
-  const bytes = Buffer.from(raw, 'base64');
+  const bytes = Uint8Array.from(atob(raw), char => char.charCodeAt(0));
   const text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(bytes);
   if (!text.trim()) throw new Error('Contract source is empty.');
   return text;

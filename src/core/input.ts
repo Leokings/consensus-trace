@@ -5,7 +5,7 @@ import { redact } from './redact.js';
 
 export class CaseInputError extends Error {}
 
-const jsonValue: z.ZodType<Json> = z.lazy(() => z.union([
+export const jsonValue: z.ZodType<Json> = z.lazy(() => z.union([
   z.null(), z.boolean(), z.number().finite().refine(Number.isSafeInteger, 'Use safe integer JSON numbers; encode larger integers as strings.'),
   z.string().max(65536), z.array(jsonValue).max(256), z.record(z.string(), jsonValue),
 ]));
@@ -29,6 +29,14 @@ export const assertionSchema = z.object({
   if (value.operator !== 'exists' && !Object.hasOwn(value, 'expected')) context.addIssue({ code: 'custom', message: 'This operator requires an expected value.' });
   if (value.pointer.includes('~') && /~(?![01])/u.test(value.pointer)) context.addIssue({ code: 'custom', message: 'Invalid JSON pointer escape.' });
 });
+export const frontendSchema = z.object({
+  label: z.string().min(1).max(80), network: z.enum(['studionet', 'bradbury', 'localnet']),
+  contractAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+  method: z.string().regex(/^[A-Za-z][A-Za-z0-9_]{0,79}$/), args: z.array(jsonValue).max(16),
+  pointer: z.string().max(256).refine(value => value === '' || value.startsWith('/')).refine(value => !/~(?![01])/u.test(value)),
+  parseJson: z.boolean(), stateVariant: z.literal('latest-final'),
+  capturedAt: z.string().datetime({ offset: true }), displayedValue: jsonValue, readValue: jsonValue.optional(),
+}).strict();
 export const caseSchema = z.object({
   name: z.string().min(1).max(100).default('Contract verification'),
   network: z.enum(['studionet', 'bradbury', 'localnet']),
@@ -38,6 +46,7 @@ export const caseSchema = z.object({
   assertions: z.array(assertionSchema).max(8).default([]),
   includeTrace: z.boolean().default(false),
   traceRound: z.number().int().min(0).max(255).default(0),
+  frontend: z.array(frontendSchema).max(8).optional(),
 }).strict();
 
 export function parseCase(input: unknown): TraceCase {
@@ -47,5 +56,6 @@ export function parseCase(input: unknown): TraceCase {
   if (redact(input).replacements > 0) throw new CaseInputError('Credential-like fields or tokens are not accepted in test cases. Use public, non-sensitive inputs.');
   const value = caseSchema.parse(input);
   if (new Set(value.assertions.map(assertion => assertion.label)).size !== value.assertions.length) throw new CaseInputError('Assertion labels must be unique.');
+  if (value.frontend && new Set(value.frontend.map(item => item.label)).size !== value.frontend.length) throw new CaseInputError('Frontend snapshot labels must be unique.');
   return value;
 }

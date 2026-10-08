@@ -3,6 +3,8 @@ import { buildBundle } from '../core/bundle.js';
 import { NETWORKS } from '../core/networks.js';
 import { FIXTURES } from '../fixtures/index.js';
 import { RunService } from './service.js';
+import { prepareTest, resolveSubmission } from '../core/execution.js';
+import { HttpCollector } from '../adapters/http.js';
 
 export function localRequestAllowed(request: IncomingMessage): boolean {
   const host = request.headers.host ?? '';
@@ -25,7 +27,8 @@ export async function api(request: IncomingMessage, response: ServerResponse, se
   const url = new URL(request.url ?? '/', 'http://localhost');
   if (!url.pathname.startsWith('/api/')) return false;
   try {
-    if (request.method === 'GET' && url.pathname === '/api/config') { json(response, 200, { version: '0.1.0', readOnly: true, networks: Object.values(NETWORKS), fixtures: FIXTURES }); return true; }
+    if (request.method === 'GET' && url.pathname === '/api/config') { json(response, 200, { version: '0.2.0', readOnly: false, apiReadOnly: true, walletTests: true, frontendComparison: true, networks: Object.values(NETWORKS), fixtures: FIXTURES }); return true; }
+    if (request.method === 'POST' && ['/api/prepare', '/api/resolve'].includes(url.pathname)) { const body = await requestJson(request); const collector = new HttpCollector(fetch, 8000, AbortSignal.timeout(40000)); json(response, 200, url.pathname === '/api/prepare' ? await prepareTest(body, collector) : await resolveSubmission(body, collector)); return true; }
     if (request.method === 'GET' && url.pathname === '/api/runs') { json(response, 200, service.store.list().map(({ report, ...run }) => ({ ...run, conclusion: report?.conclusion, origin: report?.origin, fixtureId: report?.fixtureId }))); return true; }
     if (request.method === 'POST' && (url.pathname === '/api/runs' || url.pathname === '/api/fixtures')) {
       const input = await requestJson(request);

@@ -8,26 +8,27 @@ import { NETWORKS } from '../core/networks.js';
 import { redactReport } from '../core/redact.js';
 import type { Collector } from '../core/types.js';
 import { FIXTURES, FixtureCollector, fixtureCase } from '../fixtures/index.js';
+import { prepareTest, resolveSubmission } from '../core/execution.js';
 
 const MAX_REQUEST = 65536;
 const MAX_RESPONSE = 4000000;
 const envelopeSchema = z.object({ id: z.uuid(), parentId: z.uuid().optional(), fixtureId: z.string().min(1).max(40).optional(), input: z.unknown().optional() }).strict().refine(value => (value.fixtureId !== undefined) !== (value.input !== undefined), 'Supply exactly one fixture or live input.');
 export function hostedConfig() {
-  return { version: '0.1.0', readOnly: true, storage: 'browser' as const, tracesEnabled: false,
+  return { version: '0.2.0', readOnly: false, apiReadOnly: true, walletTests: true, frontendComparison: true, storage: 'browser' as const, tracesEnabled: false,
     networks: Object.values(NETWORKS).filter(network => network.id !== 'localnet'),
     fixtures: FIXTURES.map(fixture => ({ ...fixture, input: fixtureCase(fixture.id) })),
     notice: 'Reports are saved only in this browser. Public API requests contain the case you submit; local SQLite history is never uploaded.',
   };
 }
-function response(status: number, value: unknown, extra: Record<string, string> = {}): Response {
+export function response(status: number, value: unknown, extra: Record<string, string> = {}): Response {
   return Response.json(value, { status, headers: { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', ...extra } });
 }
-function sameOrigin(request: Request): boolean {
+export function sameOrigin(request: Request): boolean {
   const origin = request.headers.get('origin');
   const site = request.headers.get('sec-fetch-site');
   return (!origin || origin === new URL(request.url).origin) && (!site || site === 'same-origin' || site === 'none');
 }
-async function requestBody(request: Request): Promise<unknown> {
+export async function requestBody(request: Request): Promise<unknown> {
   if (request.headers.get('content-type')?.split(';')[0].trim().toLowerCase() !== 'application/json') throw new CaseInputError('Use application/json.');
   if (Number(request.headers.get('content-length')) > MAX_REQUEST) throw new CaseInputError('Hosted request exceeds 64 KiB.');
   const reader = request.body?.getReader(); if (!reader) throw new CaseInputError('A JSON body is required.');
@@ -57,6 +58,27 @@ export class AdmissionGate {
   }
 }
 const gate = new AdmissionGate();
+/** Preparing and resolving only read public evidence. The server has no signer or write RPC. */
+export async function handleTestAction(request: Request, action: 'prepare' | 'resolve', options: { collector?: Collector; gate?: AdmissionGate; log?: (entry: object) => void } = {}): Promise<Response> {
+  if (request.method !== 'POST') return response(405, { error: 'Use POST.' }, { allow: 'POST' });
+  if (!sameOrigin(request)) return response(403, { error: 'Cross-origin requests are not allowed.' });
+  const key = (request.headers.get('x-vercel-forwarded-for') ?? request.headers.get('x-forwarded-for') ?? 'unknown').split(',')[0].trim().slice(0, 64);
+  const release = (options.gate ?? gate).enter(key); if (!release) return response(429, { error: 'Request limit reached. Wait a minute; this does not mean a transaction failed.' }, { 'retry-after': '60' });
+  const started = Date.now();
+  try {
+    const input = await requestBody(request); const signal = AbortSignal.any([request.signal, AbortSignal.timeout(40000)]);
+    const collector = options.collector ?? new HttpCollector(fetch, 8000, signal);
+    const result = action === 'prepare' ? await prepareTest(input, collector) : await resolveSubmission(input, collector);
+    if (signal.aborted) return response(504, { error: 'Read-only collection timed out. No server transaction was sent.' });
+    const serialized = JSON.stringify(result); if (new TextEncoder().encode(serialized).length > MAX_RESPONSE) return response(413, { error: 'Evidence response is too large.' });
+    (options.log ?? console.info)({ event: `test_${action}`, status: result.status, durationMs: Date.now() - started });
+    return response(200, result);
+  } catch (error) {
+    const validation = error instanceof z.ZodError || error instanceof CaseInputError;
+    (options.log ?? console.error)({ event: `test_${action}_failed`, validation, durationMs: Date.now() - started });
+    return response(validation ? 400 : 500, { error: validation ? 'Invalid public test input. Check the pinned source, method, arguments and submission identifiers.' : 'Test evidence could not be verified. Do not resend a submitted transaction.' });
+  } finally { release(); }
+}
 export async function handleInspection(request: Request, options: { collector?: Collector; gate?: AdmissionGate; log?: (record: object) => void } = {}): Promise<Response> {
   if (request.method !== 'POST') return response(405, { error: 'Use POST.' }, { allow: 'POST' });
   if (!sameOrigin(request)) return response(403, { error: 'Cross-origin inspection requests are not allowed.' });

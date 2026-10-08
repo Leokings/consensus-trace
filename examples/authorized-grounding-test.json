@@ -1,0 +1,19 @@
+{
+  "name": "Consensus Trace authorized grounding smoke",
+  "network": "bradbury",
+  "contractAddress": "0xb08773A551302B816F6bF3cce914D266b5C1a461",
+  "source": {
+    "repository": "Leokings/agent-output-grounding-verifier",
+    "commit": "b95bc1f8a7c41a2c880b7da8fbeef2247cd1a99f",
+    "path": "contracts/AgentOutputGroundingVerifier.py"
+  },
+  "method": "verify_claim",
+  "args": [
+    "This domain is for use in illustrative examples in documents.",
+    "[\"https://example.com/\"]"
+  ],
+  "assertions": [
+    { "label": "Verification count is positive", "method": "get_verification_count", "args": [], "pointer": "", "operator": "gte", "expected": "1" }
+  ],
+  "gasLimit": 500000
+}

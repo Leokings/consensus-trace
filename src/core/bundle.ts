@@ -1,12 +1,12 @@
 import { strToU8, unzipSync, zipSync } from 'fflate';
 import { canonicalJson, sha256 } from './json.js';
-import { redactReport } from './redact.js';
-import type { TraceReport } from './types.js';
+import { redact, redactReport } from './redact.js';
+import type { Json, TraceReport } from './types.js';
 
 export interface Manifest {
   schemaVersion: 1;
   tool: 'consensus-trace';
-  toolVersion: '0.1.0';
+  toolVersion: '0.1.0' | '0.2.0';
   reportId: string;
   origin: 'live' | 'fixture';
   createdAt: string;
@@ -34,23 +34,26 @@ export function markdownReport(report: TraceReport): string {
   for (const finding of report.findings) lines.push(`### ${finding.severity.toUpperCase()}: ${safe(finding.title)}`, '', `Code: ${finding.code}; classification: ${finding.certainty}`, '', safe(finding.detail), '', `Evidence: ${finding.evidencePaths.join(', ')}`, `Next check: ${safe(finding.nextCheck)}`, '');
   lines.push('## Assertion results', '');
   for (const assertion of report.assertions) lines.push(`- ${safe(assertion.spec.label)}: ${assertion.status} — ${safe(assertion.reason)}`);
+  if (report.frontend?.length) { lines.push('', '## Frontend comparison', ''); for (const comparison of report.frontend) lines.push(`- ${safe(comparison.snapshot.label)}: ${comparison.status} — ${safe(comparison.reason)}`); }
   lines.push('', '## Limitations', '', ...report.limitations.map(item => `- ${safe(item)}`), '', '## Integrity and redaction', '', report.redaction?.note ?? 'Review public-chain observations before sharing.', '', 'Verify file hashes against manifest.json. A self-contained manifest is not a signature or proof of authenticity. Preserve the ZIP SHA-256 separately if you need a trusted integrity anchor.', '');
   return lines.join('\n');
 }
 
 export class EvidenceBundleLimitError extends Error {}
-function bundleFiles(original: TraceReport): { files: Record<string, Uint8Array>; manifest: Manifest } {
+function bundleFiles(original: TraceReport, execution?: Json): { files: Record<string, Uint8Array>; manifest: Manifest } {
   const report = redactReport(original);
   const files: Record<string, Uint8Array> = {};
   const addJson = (path: string, value: unknown) => { files[path] = strToU8(`${canonicalJson(value)}\n`); };
   addJson('report.json', report);
   addJson('input.json', report.input);
+  if (execution) addJson('test-execution.json', redact(execution).value);
   files['report.md'] = strToU8(markdownReport(report));
   for (const [key, evidence] of Object.entries(report.observations)) addJson(`observations/${key}.json`, evidence);
   report.assertions.forEach((assertion, i) => addJson(`assertions/${i}.json`, assertion));
+  report.frontend?.forEach((comparison, i) => addJson(`frontend/${i}.json`, comparison));
   if (report.observations.deployedCode.kind === 'ok') files['source/deployed.py'] = strToU8(report.observations.deployedCode.value);
   if (report.observations.pinnedSource.kind === 'ok') files['source/pinned.py'] = strToU8(report.observations.pinnedSource.value);
-  const manifest: Manifest = { schemaVersion: 1, tool: 'consensus-trace', toolVersion: '0.1.0', reportId: report.id, origin: report.origin, createdAt: report.createdAt,
+  const manifest: Manifest = { schemaVersion: 1, tool: 'consensus-trace', toolVersion: report.toolVersion, reportId: report.id, origin: report.origin, createdAt: report.createdAt,
     files: Object.entries(files).map(([path, bytes]) => ({ path, bytes: bytes.length, sha256: sha256(bytes) })),
     notice: 'Hashes verify the exported bytes only. They do not authenticate the author or prove chain truth. Source hashes in report.json describe original captured text before any redaction.',
   };
@@ -60,8 +63,8 @@ function bundleFiles(original: TraceReport): { files: Record<string, Uint8Array>
   return { files, manifest };
 }
 export function assertBundleFits(report: TraceReport): void { bundleFiles(report); }
-export function buildBundle(original: TraceReport): { bytes: Uint8Array; sha256: string; manifest: Manifest } {
-  const { files, manifest } = bundleFiles(original);
+export function buildBundle(original: TraceReport, execution?: Json): { bytes: Uint8Array; sha256: string; manifest: Manifest } {
+  const { files, manifest } = bundleFiles(original, execution);
   const bytes = zipSync(files, { level: 6, mtime: new Date(2000, 0, 1) });
   return { bytes, sha256: sha256(bytes), manifest };
 }

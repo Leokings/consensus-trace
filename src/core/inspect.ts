@@ -7,6 +7,7 @@ import { normalizeReceipt } from './receipt.js';
 import { compareSource, decodeSource, githubFileUrl } from './source.js';
 import { decodeCallDataEnvelope, evaluateAssertion } from './assertions.js';
 import { diagnose } from './diagnose.js';
+import { compareFrontend } from './frontend.js';
 import type { Collector, Evidence, Json, TraceReport } from './types.js';
 
 const { calldata, transactions } = abi;
@@ -68,11 +69,12 @@ export async function inspectCase(rawInput: unknown, collector: Collector, optio
     : skipped('gen_dbg_traceTransaction', input.includeTrace ? 'Transaction binding was not verified.' : 'Not requested: this endpoint may reconstruct a trace by replaying execution.');
   const report: TraceReport = {
     schemaVersion: 1, id: options.id ?? randomUUID(), parentId: options.parentId,
-    origin: options.origin ?? 'live', fixtureId: options.fixtureId, createdAt: new Date().toISOString(), toolVersion: '0.1.0', sdkVersion: '1.1.8', input,
+    origin: options.origin ?? 'live', fixtureId: options.fixtureId, createdAt: new Date().toISOString(), toolVersion: '0.2.0', sdkVersion: '1.1.8', input,
     network: { id: network.id, chainId: network.chainId, rpc: network.rpc, explorer: network.explorer, chainVerified },
     identity: { transactionMatches, recipientMatches },
     observations: { chainId, receipt: receiptEvidence, lifecycle, deployedCode, pinnedSource, schema, trace }, receipt, source, assertions,
     findings: [], conclusion: 'INCOMPLETE',
+    ...(input.frontend ? { frontend: compareFrontend(input, assertions) } : {}),
     links: { contract: `${network.explorer}/address/${input.contractAddress}`, transaction: `${network.explorer}/tx/${input.transactionHash}`, ...(input.source ? { source: githubFileUrl(input.source) } : {}) },
     limitations: [
       'This is read-only verification of an existing transaction. No deployment, write, appeal or finalize command is sent.',
@@ -80,7 +82,7 @@ export async function inspectCase(rawInput: unknown, collector: Collector, optio
       'Source comparisons observe currently deployed code; transaction-time code provenance is not independently proven.',
       'RPC observations and hashes are evidence and integrity checks, not independent cryptographic proof of chain truth.',
       'Missing provider logs cannot establish that prompt complexity or a particular model caused a timeout.',
-      'Frontend staleness is not diagnosed without an instrumented, equivalent frontend read. An unavailable state read is not a stale UI.',
+      'Frontend comparisons use supplied captures of equivalent reads. They do not authenticate a third-party UI. Missing reads, old captures and different read identities are not stale-UI proof.',
       'A debug trace may be replay-reconstructed; this adapter cannot independently distinguish an original trace from a replay.',
     ],
   };

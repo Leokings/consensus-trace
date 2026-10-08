@@ -7,6 +7,7 @@ export interface Config {
   fixtures: { id: string; title: string; detail: string; input?: TraceCase }[];
   networks: { id: NetworkId; name: string; chainId: number }[];
   storage?: 'browser'; tracesEnabled?: boolean; notice?: string;
+  walletTests?: boolean; frontendComparison?: boolean;
 }
 let configuration: Config | undefined;
 let browserStore: BrowserRunStore | undefined;

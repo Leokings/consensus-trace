@@ -43,18 +43,24 @@ Refreshing creates a new report referencing the previous report ID and preservin
 
 The local Node API exposes config, saved runs, new inspections, explicit fixtures, refresh and bundle download. No generic RPC proxy, file browser or blockchain-write endpoint exists.
 
-The Vercel website exposes only configuration and a bounded stateless inspection Function. The browser persists the existing transaction ID before invoking the Function, validates returned report identity, stores the redacted result in IndexedDB and generates ZIP exports locally. Refresh creates another browser record and re-inspects the same transaction. Neither SQLite nor browser history is uploaded with a deployment. No hosted localnet or debug replay endpoint exists.
+The Vercel website exposes configuration and bounded stateless inspection, preparation and resolution Functions. All collect read-only public evidence. The browser persists inspected transaction IDs, validates returned identity, stores redacted results in IndexedDB and generates ZIP exports locally. Refresh creates another report, never another blockchain submission. Neither SQLite nor browser history is uploaded. No hosted localnet or debug replay endpoint exists.
 
 Hosted request concurrency/rate tracking is in memory per Function instance, not a global quota. Response-size and deadline failures leave an explicitly interrupted browser record, rather than claiming a protocol timeout. Large reports and full browser storage fail visibly instead of silently truncating or deleting evidence.
 
 The published npm GenLayer SDK is pinned to 1.1.8 for calldata encode/decode and read-call serialization. Receipt/lifecycle collection uses documented JSON-RPC methods directly so newer execution codes are not silently dropped by older SDK maps. Older Studio methods are handled by explicit network-specific receipt collection, not by substituting Bradbury ABIs or guessing protocol projections.
 
-## Next release boundaries
+## Wallet runner
 
-- Wallet-authorized test runner with explicit network, contract, method, value, fee cap and test authorization.
-- Persist returned transaction ID immediately; resume collection without auto-resubmission.
-- Equivalent frontend instrumentation before introducing a stale-frontend finding.
-- Opt-in external network-health context, potentially using Probe.EXE data.
-- Additional verified receipt fixtures as GenLayer's API evolves.
+```text
+public draft -> read-only source/chain preflight -> immutable persisted attempt
+             -> exact call review + wallet account/chain/source recheck
+             -> atomic cross-tab claim -> ONE wallet approval request
+             -> persisted outer hash -> read-only bound ID resolution
+             -> existing inspector -> finalized/execution-aware report + attempt ZIP
+```
 
-No one of these is implied to be implemented in v0.1.
+Uncertain wallet responses stop submission, not restart it. StudioNet uses the returned ID only after exact receipt-call binding; Bradbury resolves its GenLayer ID from an independently fetched outer transaction and consensus log. Human fee approval is required; a gas-unit budget is not a monetary fee guarantee. Tracking pauses after 15 minutes and may resume the same ID explicitly.
+
+`core/frontend.ts` compares supplied captures only to equivalent bounded reads. A capture/display mismatch without an agreeing instrumented read is divergence, not proof of a stale frontend. Reports bind these classifications to the complete case and recompute them before rendering/import.
+
+The wallet module is lazy-loaded when the test panel is selected. CLI and stdio MCP can prepare and resolve tests but have no signer. Further network-wide monitoring and independently authenticated historical-state proofs are not part of this release.

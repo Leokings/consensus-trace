@@ -6,11 +6,21 @@ import { caseSchema } from '../core/input.js';
 import { buildBundle } from '../core/bundle.js';
 import { RunStore } from '../server/store.js';
 import { RunService } from '../server/service.js';
+import { prepareTest, resolveSubmission, walletLaunchUrl } from '../core/execution.js';
+import { HttpCollector } from '../adapters/http.js';
 
 const store = new RunStore(resolve(process.env.TRACE_DATA_DIR ?? '.local', 'runs.sqlite'));
 const service = new RunService(store);
-const server = new McpServer({ name: 'consensus-trace', version: '0.1.0' });
+const server = new McpServer({ name: 'consensus-trace', version: '0.2.0' });
 const result = (value: unknown) => ({ content: [{ type: 'text' as const, text: JSON.stringify(value) }] });
+server.registerTool('prepare_test', {
+  description: 'Verify a public commit-pinned contract test and return a browser-wallet handoff URL. Does not sign or submit anything. Human review and wallet approval are mandatory; private keys and credentials are rejected.',
+  inputSchema: { test: z.unknown() }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: true },
+}, async ({ test }) => { const prepared = await prepareTest(test, new HttpCollector(fetch, 8000, AbortSignal.timeout(40000))); return result({ prepared, walletLaunchUrl: prepared.status === 'READY' ? walletLaunchUrl(prepared.draft) : undefined, approvalRequired: true }); });
+server.registerTool('resolve_submission', {
+  description: 'Resolve an already-sent outer EVM hash to a bound GenLayer ID using public receipt evidence. Never resends, appeals, or finalizes. Supply the exact draft, sender, outerHash, encoded data and gas from the browser test record.',
+  inputSchema: { submission: z.unknown() }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: true },
+}, async ({ submission }) => result(await resolveSubmission(submission, new HttpCollector(fetch, 8000, AbortSignal.timeout(40000)))));
 server.registerTool('inspect_transaction', {
   description: 'Inspect an existing GenLayer transaction, compare a pinned PUBLIC GitHub source and assert current latest-final view values. Never signs, sends, appeals or finalizes. Saves a local report. Optional trace may replay execution.',
   inputSchema: { testCase: caseSchema },

@@ -1,10 +1,10 @@
 {
   "name": "consensus-trace",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Source-bound, read-only live test verification for GenLayer Intelligent Contracts",
+  "description": "Wallet-authorized test execution and source-bound diagnostics for GenLayer Intelligent Contracts",
   "engines": { "node": ">=24.11.0 <25" },
   "scripts": {
     "dev": "tsx watch src/server/index.ts --dev",
@@ -25,6 +25,7 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "tsx": "4.23.15",
+    "viem": "2.57.4",
     "zod": "4.6.5"
   },
   "devDependencies": {

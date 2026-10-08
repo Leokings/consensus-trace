@@ -1,12 +1,18 @@
 # Security boundaries
 
-Consensus Trace v0.1 has two deployment modes: a loopback-only local workbench and a public, read-only Vercel website for public contract evidence. The website has a stateless inspection API and browser-private report history; it has no shared saved-report endpoint, signing wallet or blockchain-write capability. These boundaries have automated tests, but this is not an independent security audit or a guarantee of production multi-tenant security.
+Consensus Trace v0.2 has a loopback-only local workbench and a public Vercel website. Its stateless APIs collect public evidence using reads only. The browser can ask an injected EIP-1193 wallet to approve one reviewed test; the server never receives keys or signing authority. There is no shared saved-report endpoint. These boundaries have automated tests, but this is not an independent security audit or a guarantee of production multi-tenant security.
 
 ## Implemented safeguards
 
 - The local server listens on `127.0.0.1`; strict Host and same-origin checks reject rebinding-style hostnames and cross-origin requests. The hosted API rejects cross-origin browser submissions and uses same-origin frontend requests over HTTPS. Its public read-only endpoint is not an authenticated service.
 - Only fixed official network endpoints; a fixed localnet endpoint is available locally but forbidden on the website. No user-supplied RPC URL.
 - RPC allowlist excludes sends, deploys, writes, appeals, cancels and finalize operations.
+- The only submission is an explicit browser-wallet `eth_sendTransaction`, using the pinned SDK chain ABI and serializers without SDK fallback/retry. User-transferred value is fixed to zero; reviewed gas units are capped at two million. Gas units are not a monetary fee cap: the human must review wallet-displayed fees.
+- Exact deployed/pinned source, a recognized public-write annotation, current chain and the reviewed account are checked before signing. Method recognition is not a Python parser or a contract-safety guarantee.
+- An atomic IndexedDB claim is persisted before the wallet call. A reload, transport error or second tab cannot reuse that attempt to ask for another submission. Duplicate separately prepared attempts are still possible; this does not provide protocol-wide business idempotency.
+- Outer hashes are saved immediately. Uncertain responses require checking wallet activity and read-only hash recovery. Recovery verifies exact encoded calldata and identity; Bradbury additionally resolves one nonzero GenLayer ID from the configured consensus emitter. StudioNet checks the returned sender, recipient and complete calldata before using its direct ID.
+- Attempt digests, prepared evidence, account, calldata, gas allocation and returned hashes cannot be overwritten. Submitted records cannot become unsent again. Damaged attempts are preserved with a warning; no wallet call can be made from them.
+- Frontend comparisons require matching network, contract, method, arguments, pointer, parsing mode and label. Captures must be recent. A failed RPC is not stale UI; an unexplained mismatch is only divergence. A supplied agreeing frontend read supports a display-update diagnosis but does not independently authenticate the capture.
 - Source retrieval is limited to validated owner/repository, full commit SHA and relative file paths at `raw.githubusercontent.com`, with redirects disabled.
 - RPC and source requests have bounded response bodies, validated JSON-RPC response IDs and no automatic retries. Deadlines are 15 seconds locally and eight seconds on the website.
 - At most three concurrent inspections; up to eight view assertions; bounded arguments and input bodies.
@@ -30,5 +36,7 @@ RPC authenticity beyond ordinary HTTPS; independent chain proof; historical stat
 `gen_call` is read-only at the chain level, but a contract view can still perform computation or external requests. The tool does not promise that every read is resource-free. A debug trace may replay execution and consume additional resources.
 
 Hosted case inputs necessarily pass through Vercel and the relevant fixed RPC/public-source services. Saved browser history and exported bundles are not automatically published or uploaded. Do not enter secrets or private material. Treat source files, logs, assertions and report descriptions as untrusted data. Review the bundle before submission.
+
+Test attempts include only public call data, public wallet addresses and submission IDs. Preparation and read-only resolution are available through CLI/MCP; agents receive a wallet-review link, never an automatically signing tool. The handoff fragment contains public test data, does not auto-submit and must not include sensitive arguments. A zero-value public-write call can still make consequential application changes; the builder is responsible for reviewing the actual contract.
 
 Report a vulnerability privately to the repository maintainer. Do not include live credentials in a report or public issue.

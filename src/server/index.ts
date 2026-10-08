@@ -27,10 +27,10 @@ const server = createServer((request, response) => {
     try {
       const file = path === '/' ? resolve(webRoot, 'index.html') : fullPath;
       const bytes = await readFile(file);
-      response.writeHead(200, { 'content-type': mime[extname(file)] ?? 'application/octet-stream', 'x-content-type-options': 'nosniff', 'content-security-policy': "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'" }); response.end(bytes);
+      response.writeHead(200, { 'content-type': mime[extname(file)] ?? 'application/octet-stream', 'x-content-type-options': 'nosniff', 'content-security-policy': "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' https://studio.genlayer.com https://rpc-bradbury.genlayer.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'" }); response.end(bytes);
     } catch { response.writeHead(404); response.end('Not found. Run npm run build before npm start.'); }
   })().catch(() => { if (!response.headersSent) response.writeHead(500); response.end('Unexpected local server error.'); });
 });
-server.listen(port, '127.0.0.1', () => console.log(`Consensus Trace: http://127.0.0.1:${port} · read-only · ${dev ? 'development' : 'production'}`));
+server.listen(port, '127.0.0.1', () => console.log(`Consensus Trace: http://127.0.0.1:${port} · wallet-authorized tests / read-only API · ${dev ? 'development' : 'production'}`));
 async function shutdown() { server.close(); await vite?.close(); store.close(); process.exit(0); }
 process.once('SIGINT', () => { void shutdown(); }); process.once('SIGTERM', () => { void shutdown(); });

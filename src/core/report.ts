@@ -1,11 +1,12 @@
 import { z } from 'zod';
 import { assertComplexity } from './bounds.js';
-import { assertionSchema, caseSchema, parseCase } from './input.js';
+import { assertionSchema, caseSchema, frontendSchema, parseCase } from './input.js';
 import { canonicalJson } from './json.js';
 import { NETWORKS } from './networks.js';
 import { normalizeReceipt } from './receipt.js';
 import { compareSource } from './source.js';
 import { evaluateAssertion } from './assertions.js';
+import { compareFrontend } from './frontend.js';
 import type { RunRecord, TraceReport } from './types.js';
 
 const text = z.string().max(300000);
@@ -21,13 +22,14 @@ const count = z.number().int().nonnegative();
 const round = z.object({ round: text, validators: z.array(z.object({ address: text, vote }).strict()).max(4096), counts: z.object({ AGREE: count, DISAGREE: count, TIMEOUT: count, DETERMINISTIC_VIOLATION: count, NOT_VOTED: count, UNKNOWN: count }).strict(), result: text.nullable() }).strict();
 const reportSchema = z.object({
   schemaVersion: z.literal(1), id: z.uuid(), parentId: z.uuid().optional(), origin: z.enum(['live', 'fixture']), fixtureId: z.string().max(40).optional(),
-  createdAt: timestamp, toolVersion: z.literal('0.1.0'), sdkVersion: z.literal('1.1.8'), input: caseSchema,
+  createdAt: timestamp, toolVersion: z.enum(['0.1.0', '0.2.0']), sdkVersion: z.literal('1.1.8'), input: caseSchema,
   network: z.object({ id: z.enum(['studionet', 'bradbury', 'localnet']), chainId: z.number().int(), rpc: text, explorer: text, chainVerified: z.boolean() }).strict(),
   identity: z.object({ transactionMatches: z.boolean(), recipientMatches: z.boolean() }).strict(),
   observations: z.object({ chainId: evidence, receipt: evidence, lifecycle: evidence, deployedCode: evidence, pinnedSource: evidence, schema: evidence, trace: evidence }).strict(),
   receipt: z.object({ found: z.boolean(), storedStatus: text, statusCode: z.number().int().nullable(), finalized: z.boolean(), execution: z.enum(['SUCCESS', 'ERROR', 'TIMEOUT', 'NONDET_DISAGREE', 'DETERMINISTIC_VIOLATION', 'UNKNOWN']), executionBasis: text, transactionHash: z.string().regex(/^0x[a-fA-F0-9]{64}$/).nullable(), recipient: z.string().regex(/^0x[a-fA-F0-9]{40}$/).nullable(), rounds: z.array(round).max(256), inconsistencies: z.array(text).max(512) }).strict(),
   source: z.object({ comparison: z.enum(['EXACT', 'LINE_ENDINGS_ONLY', 'MISMATCH', 'UNAVAILABLE', 'NOT_REQUESTED']), deployedSha256: digest.optional(), pinnedSha256: digest.optional(), deployedLfSha256: digest.optional(), pinnedLfSha256: digest.optional() }).strict(),
   assertions: z.array(z.object({ spec: assertionSchema, evidence, stateVariant: z.literal('latest-final'), status: z.enum(['PASS', 'FAIL', 'UNAVAILABLE', 'SKIPPED']), actual: z.json().optional(), reason: text }).strict()).max(8),
+  frontend: z.array(z.object({ snapshot: frontendSchema, status: z.enum(['MATCH', 'DISPLAY_STALE', 'DIVERGENCE', 'NOT_COMPARABLE', 'UNAVAILABLE']), reason: text, assertionIndex: z.number().int().min(0).max(7).optional() }).strict()).max(8).optional(),
   findings: z.array(z.object({ code: text, severity: z.enum(['error', 'warning', 'info']), certainty: z.enum(['observed', 'limitation']), title: text, detail: text, evidencePaths: z.array(text).max(64), nextCheck: text }).strict()).max(256),
   conclusion: z.enum(['CHECKS_PASSED', 'ISSUES_FOUND', 'INCOMPLETE']), links: z.object({ contract: text, transaction: text, source: text.optional() }).strict(),
   limitations: z.array(text).max(64), redaction: z.object({ applied: z.boolean(), replacements: count, note: text }).strict().optional(),
@@ -52,6 +54,7 @@ export function parseReport(value: unknown, expected?: Pick<RunRecord, 'id' | 'i
   const expectedLinks = { contract: `${network.explorer}/address/${report.input.contractAddress}`, transaction: `${network.explorer}/tx/${report.input.transactionHash}`, ...(report.input.source ? { source: `https://github.com/${report.input.source.repository}/blob/${report.input.source.commit}/${report.input.source.path}` } : {}) };
   if (report.network.id !== network.id || report.network.chainId !== network.chainId || report.network.rpc !== network.rpc || report.network.explorer !== network.explorer || canonicalJson(report.links) !== canonicalJson(expectedLinks)) throw new Error('Report network or evidence links do not match the requested case.');
   if (canonicalJson(report.assertions.map(item => item.spec)) !== canonicalJson(report.input.assertions)) throw new Error('Report assertions do not match the complete requested input.');
+  if (canonicalJson(report.frontend) !== canonicalJson(report.input.frontend ? compareFrontend(report.input, report.assertions) : undefined)) throw new Error('Report frontend comparison is not bound to the supplied capture and finalized reads.');
   if (report.receipt.finalized !== (report.receipt.storedStatus === 'FINALIZED')) throw new Error('Report finality fields disagree.');
   for (const entry of report.receipt.rounds) for (const key of vote.options) if (entry.counts[key] !== entry.validators.filter(item => item.vote === key).length) throw new Error('Report validator counts disagree.');
   for (const key of ['deployedCode', 'pinnedSource'] as const) if (report.observations[key].kind === 'ok' && typeof report.observations[key].value !== 'string') throw new Error('Report source text is malformed.');

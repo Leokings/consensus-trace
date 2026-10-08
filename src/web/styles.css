@@ -8,4 +8,10 @@
 
 /* A tall history sidebar must never vertically center or displace the report. */
 .main-panel{margin-block:0}
+[hidden]{display:none!important}
+.test-runner{border:1px solid var(--line);border-radius:5px;background:var(--panel);padding:0 24px 24px;overflow:hidden}
+.test-runner>.provenance{margin:0 -24px}.test-runner>.report-heading{padding:24px 0}
+.test-json{min-height:340px;max-height:650px;font-size:12px}.test-runner .button-row{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
+.test-review,.test-tracking{border-top:1px solid var(--line);margin-top:24px;padding-top:24px}.test-review p,.test-tracking p{font-size:12px;line-height:1.7;margin:12px 0;overflow-wrap:anywhere}.test-history{margin-top:24px;max-height:300px;overflow:auto}
+.test-runner .report-view{margin:24px -12px 0}.test-runner .hash-block{margin:16px 0}.test-runner h3{font-size:15px}.mode-switch button{font-size:11px}
 @media(min-width:641px){.history{max-height:45vh;overflow:auto}}

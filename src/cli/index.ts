@@ -3,10 +3,19 @@ import { resolve } from 'node:path';
 import { buildBundle } from '../core/bundle.js';
 import { RunStore } from '../server/store.js';
 import { RunService } from '../server/service.js';
+import { prepareTest, resolveSubmission, walletLaunchUrl } from '../core/execution.js';
+import { HttpCollector } from '../adapters/http.js';
 
 async function main() {
   const [command, argument, ...flags] = process.argv.slice(2);
-  if (!['inspect', 'demo', 'get'].includes(command) || !argument) throw new Error('Usage: npm run trace -- inspect case.json [--out directory] | demo fixture-id [--out directory] | get report-id');
+  if (['prepare', 'resolve'].includes(command) && argument) {
+    if (flags.length) throw new Error('prepare and resolve do not accept output flags.');
+    const input: unknown = JSON.parse(await readFile(resolve(argument), 'utf8')); const collector = new HttpCollector(fetch, 8000, AbortSignal.timeout(40000));
+    if (command === 'prepare') { const prepared = await prepareTest(input, collector); console.log(JSON.stringify({ prepared, walletLaunchUrl: prepared.status === 'READY' ? walletLaunchUrl(prepared.draft) : undefined, approvalRequired: true }, null, 2)); }
+    else console.log(JSON.stringify(await resolveSubmission(input, collector), null, 2));
+    return;
+  }
+  if (!['inspect', 'demo', 'get'].includes(command) || !argument) throw new Error('Usage: npm run trace -- inspect case.json [--out directory] | demo fixture-id [--out directory] | get report-id | prepare test.json | resolve submission.json. Signing occurs only in a reviewed browser wallet.');
   if (flags.length && (flags.length !== 2 || flags[0] !== '--out' || !flags[1])) throw new Error('Only --out directory is supported.');
   const store = new RunStore(resolve(process.env.TRACE_DATA_DIR ?? '.local', 'runs.sqlite'));
   try {
