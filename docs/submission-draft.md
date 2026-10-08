@@ -9,19 +9,19 @@ Consensus Trace — Source-Bound Live Test Verification for GenLayer
 ## Notes / Description
 
 ```text
-Built an MIT-licensed, local-first debugging workbench for GenLayer Intelligent Contracts. Builders enter an existing GenLayer transaction ID, contract address, pinned public source commit and view assertions. Consensus Trace separates stored finality, execution outcome, validator votes, source matching and current finalized application state.
+Built an MIT-licensed debugging workbench and public Vercel website for GenLayer Intelligent Contracts. Builders enter an existing transaction ID, contract address, pinned public source commit and view assertions. Consensus Trace separates finality, execution outcome, validator votes, source matching and current finalized application state.
 
-Includes a React UI, SQLite report history, CLI, stdio MCP tools and SHA-256 evidence ZIPs. Diagnostics preserve unknowns: client request timeouts are not protocol timeouts, unavailable reads are not stale frontends, and replay traces do not override receipts.
+Includes browser-private history, a local SQLite edition, CLI, stdio MCP tools, bounded read-only APIs and SHA-256 evidence ZIPs. All 130 tests pass. The hosted UI inspected real Bradbury and StudioNet receipts; reload, refresh and downloaded ZIP verification were checked.
 
-Read-only checks against existing Bradbury and StudioNet transactions are recorded separately from synthetic examples. No keys or new transactions are required. This version verifies current latest-final state, not historical causality. Signed test execution and frontend instrumentation are future work.
+Bradbury source and result checks passed. StudioNet's missing schema/source/assertion evidence remained explicit. Synthetic demos are not live proof. No keys or new transactions are required. Reads verify current latest-final state, not historical causality; signed execution and frontend instrumentation remain future work.
 ```
 
-## Evidence entries to prepare after publication
+## Evidence entries
 
-1. **GitHub Repository** — the standalone Consensus Trace repository. Publication URL not assigned yet.
-2. **Website / Demo** — a public hosted deployment only after hosted auth/security work and authorization. The current loopback URL is not public reviewer evidence.
-3. **GitHub File** — `docs/verification.md` plus reviewed live observation bundles under `docs/evidence/`.
-4. **GitHub File** — `src/core/inspect.ts` or the reproducible test suite, pinned to the actual release commit.
+1. **GitHub Repository** — standalone source is committed locally; a remote repository URL has not been assigned. Publish only to the approved visibility before filling this entry.
+2. **Website / Demo** — https://consensus-trace-leokings588-5902s-projects.vercel.app/
+3. **Verification evidence** — `docs/hosted-verification.md`, `docs/hosted-deployment-2026-10-08.json` and reviewed live bundles under `docs/evidence/`. Add their actual repository links after publication.
+4. **Contract-independent tooling source** — `src/core/inspect.ts` or `tests/hosted.test.ts`, pinned to the actual release commit after publication.
 
 Use the actual contribution date. Choose the portal's relevant developer-tooling/project category; do not present this as a deployed Intelligent Contract.
 

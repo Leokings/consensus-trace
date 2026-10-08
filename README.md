@@ -6,6 +6,8 @@ This is developer tooling, not another Intelligent Contract, an offline determin
 
 ## Website
 
+[Open Consensus Trace](https://consensus-trace-leokings588-5902s-projects.vercel.app/).
+
 The hosted website uses a bounded, stateless Vercel API to inspect StudioNet and Bradbury transactions. Open **Inspect live**, supply an existing transaction and contract, optionally add a pinned public source and view assertions, then inspect the result. The included live example is prefilled.
 
 History stays in that browser's IndexedDB; there is no shared history database or account. Reload to reopen a saved report. **Refresh receipt** makes a new snapshot of the same transaction, not a new blockchain transaction. **Export evidence ZIP** builds the bundle in your browser and displays its independent SHA-256 digest.
@@ -128,7 +130,7 @@ The public API accepts at most 64 KiB per request, eight assertions, bounded JSO
 
 Browser storage is limited to 200 reports and approximately 32 MiB. Reaching the limit produces a visible error; old evidence is not silently deleted. Export valuable reports before clearing site data.
 
-See [architecture](docs/architecture.md), [security boundaries](SECURITY.md), [verification evidence](docs/verification.md) and [submission draft](docs/submission-draft.md).
+See [architecture](docs/architecture.md), [security boundaries](SECURITY.md), [local verification evidence](docs/verification.md), [hosted browser verification](docs/hosted-verification.md) and [submission draft](docs/submission-draft.md).
 
 ## Important limits
 

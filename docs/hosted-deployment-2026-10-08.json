@@ -1,0 +1,85 @@
+{
+  "project": "consensus-trace",
+  "projectId": "prj_22HOWF0e4VPe4bQeDhoKpCAjSviL",
+  "teamId": "team_2L0T4LCdFsCTFcckeTFWZRvN",
+  "deploymentId": "dpl_9gKt1vGi4FKRFDaWLyGRfTPGj6wQ",
+  "target": "production",
+  "readyState": "READY",
+  "publicUrl": "https://consensus-trace-leokings588-5902s-projects.vercel.app/",
+  "protectedDeploymentUrl": "https://consensus-trace-3pt48zj4w-leokings588-5902s-projects.vercel.app/",
+  "inspectionUrl": "https://vercel.com/leokings588-5902s-projects/consensus-trace/9gKt1vGi4FKRFDaWLyGRfTPGj6wQ",
+  "source": {
+    "kind": "cli-upload-manually-recorded-local-source-snapshot",
+    "localSnapshotCommit": "dae2310d1bd2062acad7e29fe092aef3ceeaa015",
+    "vercelGitMetadata": {},
+    "platformVerifiedCommitBinding": false
+  },
+  "build": {
+    "framework": "vite",
+    "nodeVersion": "24.x",
+    "region": "iad1",
+    "buildingAt": 1791491117010,
+    "readyAt": 1791491161747,
+    "buildingToReadyMs": 44737,
+    "localTestsPassed": 130,
+    "localTestFilesPassed": 7,
+    "localBuildPassed": true,
+    "productionDependencyVulnerabilities": 0
+  },
+  "hosted": {
+    "storage": "browser-indexeddb",
+    "networks": ["studionet", "bradbury"],
+    "blockchainWritesEnabled": false,
+    "debugTracesEnabled": false,
+    "localnetEnabled": false,
+    "publicHttpStatus": 200,
+    "uniqueDeploymentUnauthenticatedHttpStatus": 302,
+    "protection": "prod_deployment_urls_and_all_previews",
+    "rateLimitScope": "best-effort-per-function-instance",
+    "customWafPolicyVerified": false
+  },
+  "browserChecks": {
+    "bradburyReportId": "712c3316-6dce-46d7-8ad1-0939bb72d26f",
+    "bradburyConclusion": "CHECKS_PASSED",
+    "bradburyDurationMs": 3427,
+    "bradburyExport": {
+      "path": "docs/evidence/hosted-bradbury-712c3316-6dce-46d7-8ad1-0939bb72d26f.zip",
+      "sha256": "5060dddceeb0dc0ce3dff5179dbd2cf64d6d70a30793357ae9489b23fcad7800",
+      "valid": true,
+      "anchored": true,
+      "filesChecked": 13
+    },
+    "reloadRestoredReport": true,
+    "refreshReportId": "239eba1f-dbb3-4cf9-aaab-1eb15d342b31",
+    "refreshDurationMs": 3056,
+    "refreshPreservedTransaction": true,
+    "originalReportPreserved": true,
+    "syntheticErrorReportId": "df2a6eee-61d6-4f31-a238-a4f906aba46c",
+    "syntheticErrorExplicitlyLabelled": true,
+    "studionetReportId": "b8b8dabf-e8ef-4d07-a853-87fea800ae0c",
+    "studionetConclusion": "INCOMPLETE",
+    "studionetDurationMs": 257,
+    "studionetExport": {
+      "path": "docs/evidence/hosted-studionet-b8b8dabf-e8ef-4d07-a853-87fea800ae0c.zip",
+      "sha256": "1c4075febaa0ebc27a3626540e2196b88041ca56354387012c3a5e17ed5a981c",
+      "valid": true,
+      "anchored": true,
+      "filesChecked": 10
+    },
+    "screenshot": "docs/evidence/hosted-bradbury-2026-10-08.jpg"
+  },
+  "monitoring": {
+    "checkedAt": "2026-10-08T20:33:46Z",
+    "source": "Vercel runtime logs and grouped runtime errors",
+    "observedFunctionRegion": "cpt1",
+    "runtimeErrorsInSelectedOneHourWindow": 0,
+    "browserWarnings": "MetaMask extension warnings; no application-origin errors observed"
+  },
+  "limitations": [
+    "Existing-transaction read-only inspection; no newly signed AI consensus test.",
+    "Current latest-final assertions do not prove historical transaction causality.",
+    "StudioNet schema unavailable; no source or assertions supplied in that example.",
+    "Local source commit is not independently bound by Vercel Git metadata.",
+    "Public admission control is per instance, not a distributed quota or independent security audit."
+  ]
+}
